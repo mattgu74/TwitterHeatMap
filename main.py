@@ -22,21 +22,14 @@ class MyStreamer(TwythonStreamer):
     def __init__(self, *args, **kwargs):
         TwythonStreamer.__init__(self, *args, **kwargs)
         print('INIT '*10)
-        self.queues = {}
+        self.queue = gevent.queue.Queue()
 
     def on_success(self, data):
-        for queues in self.queues.values():
-            queues.put_nowait(data)
+        self.queue.put_nowait(data)
 
     def on_error(self, status_code, data):
         print status_code, data, "STOP MySTREAMER !!"
         self.disconnect()
-
-    def get_queue(self, uid):
-        return self.queues.setdefault(uid, gevent.queue.Queue())
-
-    def delete_queue(self, uid):
-        del self.queues[uid]
 
 
 class WatchDog:
@@ -52,12 +45,8 @@ class WatchDog:
         if self.green.dead:
             self.streamer.disconnect()
             self.green.kill()
-            # save queeus
-            queues = self.streamer.queues
             # reload
             self.init()
-            # restor queues
-            self.streamer.queues = queues
 
 dog = WatchDog()
 
@@ -72,14 +61,13 @@ def test_connect():
     dog.check_alive()
     uid = request.namespace.socket.sessid
     print('Client %s connected' % uid)
-    queue = dog.streamer.get_queue(uid)
     while True:
         try:
-            tweet = queue.get(timeout=5)
+            tweet = dog.streamer.queue.get(timeout=5)
         except gevent.queue.Empty:
             dog.check_alive()
         else:
-            emit('tweet', tweet)
+            emit('tweet', tweet, broadcast=True)
 
 
 @socketio.on('disconnect', namespace='/test')
@@ -87,7 +75,6 @@ def test_disconnect():
     dog.check_alive()
     uid = request.namespace.socket.sessid
     print('Client %s disconnected' % uid)
-    dog.streamer.delete_queue(uid)
 
 
 if __name__ == '__main__':
