@@ -4,7 +4,6 @@ from config import CONF
 from pprint import pprint
 from flask import Flask, render_template
 from flask.ext.socketio import SocketIO, emit, BaseNamespace
-import gevent
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
