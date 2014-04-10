@@ -39,30 +39,55 @@ class MyStreamer(TwythonStreamer):
         del self.queues[uid]
 
 
-streamer = MyStreamer(CONF['APP_KEY'], CONF['APP_SECRET'],
-                CONF['OAUTH_TOKEN'], CONF['OAUTH_TOKEN_SECRET'])
-green = gevent.spawn(streamer.statuses.filter, locations="-5,42.2,8.13,51")
+class WatchDog:
+    def __init__(self):
+        self.init()
+
+    def init(self):
+        self.streamer = MyStreamer(CONF['APP_KEY'], CONF['APP_SECRET'],
+                        CONF['OAUTH_TOKEN'], CONF['OAUTH_TOKEN_SECRET'])
+        self.green = gevent.spawn(self.streamer.statuses.filter, locations="-5,42.2,8.13,51")
+
+    def check_alive(self):
+        if self.green.dead:
+            self.streamer.disconnect()
+            self.green.kill()
+            # save queeus
+            queues = self.streamer.queues
+            # reload
+            self.init()
+            # restor queues
+            self.streamer.queues = queues
+
+dog = WatchDog()
 
 
 @app.route('/')
 def index():
+    dog.check_alive()
     return render_template('index.html')
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
+    dog.check_alive()
     uid = request.namespace.socket.sessid
     print('Client %s connected' % uid)
-    queue = streamer.get_queue(uid)
+    queue = dog.streamer.get_queue(uid)
     while True:
-        tweet = queue.get(timeout=60)
-        emit('tweet', tweet)
+        try:
+            tweet = queue.get(timeout=5)
+        except gevent.queue.Empty:
+            dog.check_alive()
+        else:
+            emit('tweet', tweet)
 
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
+    dog.check_alive()
     uid = request.namespace.socket.sessid
     print('Client %s disconnected' % uid)
-    streamer.delete_queue(uid)
+    dog.streamer.delete_queue(uid)
 
 
 if __name__ == '__main__':
