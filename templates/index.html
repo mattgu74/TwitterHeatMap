@@ -1,20 +1,52 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Flask-SocketIO Test</title>
+    <title>Twitter Heatmap France</title>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="http:////cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
+        var heatmap=null;
         $(document).ready(function(){
             var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
             socket.on('tweet', function(msg) {
                 $('#log').prepend('<br>@' + msg.user.screen_name + ': ' + msg.text);
+		console.log(msg);
+		if(msg.geo != null)
+		heatmap.store.addDataPoint(msg.geo.coordinates[1]*100+503, (-1*(msg.geo.coordinates[0]-42.20)+8.8)*100);
             });
         });
     </script>
 </head>
 <body>
     <h1>Twitter en France</h1>
-    <div id="log"></div>
+    <div id="heatmapArea" style="widht:1316px; height: 880px;" />
+    <div id="log" style="overflow:auto;" ></div>
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="static/heatmap.js"></script>
+<script type="text/javascript">
+window.onload = function(){
+ 
+    // heatmap configuration
+    var config = {
+        element: document.getElementById("heatmapArea"),
+        radius: 10,
+        opacity: 50,
+        legend: {
+            position: 'br',
+            title: 'Example Distribution'
+        }   
+    };
+    
+    //creates and initializes the heatmap
+    heatmap = h337.create(config);
+ 
+    document.getElementById("heatmapArea").onclick = function(e){
+        // layerX and layerY is deprecated and will be removed,
+        // use another way of determining the x and y position in an element
+        heatmap.store.addDataPoint(e.layerX, e.layerY, 1);
+    };
+};
+</script>
 </body>
 </html>

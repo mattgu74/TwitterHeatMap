@@ -32,7 +32,7 @@ def index():
 def test_connect():
     stream = MyStreamer(CONF['APP_KEY'], CONF['APP_SECRET'],
                     CONF['OAUTH_TOKEN'], CONF['OAUTH_TOKEN_SECRET'])
-    stream.statuses.filter(locations="0,45,5,50")
+    stream.statuses.filter(locations="-5,42.2,8.13,51")
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
@@ -40,6 +40,6 @@ def test_disconnect():
 
 if __name__ == '__main__':
     try:
-        socketio.run(app)
+        socketio.run(app, port=55555, host="0.0.0.0")
     except KeyboardInterrupt:
         pass
