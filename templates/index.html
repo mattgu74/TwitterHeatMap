@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="http:////cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+            socket.on('tweet', function(msg) {
+                $('#log').prepend('<br>@' + msg.user.screen_name + ': ' + msg.text);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Twitter en France</h1>
+    <div id="log"></div>
+</body>
+</html>
