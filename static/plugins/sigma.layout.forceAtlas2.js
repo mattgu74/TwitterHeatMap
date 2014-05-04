@@ -409,12 +409,12 @@
                 min_created = node.created;
               }
             }
-            if(min_created && ((new Date() - min_created)/1000 > (connexes[i].length * connexes[i].length * 5))) {
+            if(min_created && ((new Date() - min_created)/1000 > (connexes[i].length * 5))) {
               for(var j=0; j<connexes[i].length; j++) {
                 var node = graph.nodes(connexes[i][j]);
                 try {
                   graph.dropNode(node.id);
-                } catch(e) {console.log("error", e)}
+                } catch(e) { }
               } 
             }
           }

@@ -41,7 +41,7 @@ class WatchDog:
     def init(self):
         self.streamer = MyStreamer(CONF['APP_KEY'], CONF['APP_SECRET'],
                         CONF['OAUTH_TOKEN'], CONF['OAUTH_TOKEN_SECRET'])
-        self.green = gevent.spawn(self.streamer.statuses.filter, locations="-5,42.2,8.13,51")
+        self.green = gevent.spawn(self.streamer.statuses.filter, track="korben,utc,innovation,innovations,startup,tech,technologie,html5,js,google,api,sdk,webdesign,design,web")
 
     def check_alive(self):
         if self.green.dead:

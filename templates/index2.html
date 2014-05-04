@@ -15,12 +15,12 @@
     </style>
 </head>
 <body>
-    <div id="info" style="position:absolute; z-index:100; top:0px; right:0px; width:250px; height: 100px; text-align: right; padding: 10px;">
+    <div id="info" style="position:absolute; z-index:100; top:0px; right:0px; width:400px; height: 100px; text-align: right; padding: 10px;">
       <span id="nodes"></span><strong> noeuds</strong><br/>
       <span id="edges"></span><strong> liens</strong><br/>
       <span id="tweets"></span><strong> tweets</strong><br/>
-      <h3>10 premiers noeuds</h3>
-      <table border=0>
+      <h3>20 premiers noeuds (nombre de liens)</h3>
+      <table border=0 style="float: right;" >
         <tr><td id="desc0"></td><td id="rank0"></td></tr>
         <tr><td id="desc1"></td><td id="rank1"></td></tr>
         <tr><td id="desc2"></td><td id="rank2"></td></tr>
@@ -31,6 +31,16 @@
         <tr><td id="desc7"></td><td id="rank7"></td></tr>
         <tr><td id="desc8"></td><td id="rank8"></td></tr>
         <tr><td id="desc9"></td><td id="rank9"></td></tr>
+        <tr><td id="desc10"></td><td id="rank10"></td></tr>
+        <tr><td id="desc11"></td><td id="rank11"></td></tr>
+        <tr><td id="desc12"></td><td id="rank12"></td></tr>
+        <tr><td id="desc13"></td><td id="rank13"></td></tr>
+        <tr><td id="desc14"></td><td id="rank14"></td></tr>
+        <tr><td id="desc15"></td><td id="rank15"></td></tr>
+        <tr><td id="desc16"></td><td id="rank16"></td></tr>
+        <tr><td id="desc17"></td><td id="rank17"></td></tr>
+        <tr><td id="desc18"></td><td id="rank18"></td></tr>
+        <tr><td id="desc19"></td><td id="rank19"></td></tr>
       </table>
     </div>
     <div id="pub" style="position:absolute; z-index:100; top:0px; left:0px; width:160px; height: 600px;">
@@ -165,8 +175,8 @@
           nodes.sort(function(a, b){
             return s.graph.degree(b.id) - s.graph.degree(a.id);
           });
-          for(var i=0; i<Math.min(10, nodes.length); i++) {
-            $("#desc"+i).html("#"+ (i+1) +" <strong>"+nodes[i].type+"</strong> : ")
+          for(var i=0; i<Math.min(20, nodes.length); i++) {
+            $("#desc"+i).html("#"+ (i+1) +" <strong>"+nodes[i].type+"</strong> : (" + s.graph.degree(nodes[i].id) + ")")
             if(nodes[i].type == "user")
               $("#rank"+i).html('<a href="https://www.twitter.com/'+nodes[i].screen_name+'" target="_blank" >'+nodes[i].label+'</a')
             else
