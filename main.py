@@ -56,7 +56,12 @@ dog = WatchDog()
 @app.route('/')
 def index():
     dog.check_alive()
-    return render_template('index.html')
+    return render_template('index1.html')
+
+@app.route('/2')
+def index2():
+    dog.check_alive()
+    return render_template('index2.html')
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
