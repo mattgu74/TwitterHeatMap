@@ -5,7 +5,7 @@
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="http:////cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" src="static/sigma.min.js"></script>
-    <script type="text/javascript" src="static/plugins/sigma.layout.forceAtlas2.min.js"></script>
+    <script type="text/javascript" src="static/plugins/sigma.layout.forceAtlas2.js"></script>
     <style>
     html,body { 
       height: 100%;
@@ -15,10 +15,23 @@
     </style>
 </head>
 <body>
-    <div id="info" style="position:absolute; z-index:100; top:0px; right:0px; width:200px; height: 100px; text-align: right; padding: 10px;">
+    <div id="info" style="position:absolute; z-index:100; top:0px; right:0px; width:250px; height: 100px; text-align: right; padding: 10px;">
       <span id="nodes"></span><strong> noeuds</strong><br/>
       <span id="edges"></span><strong> liens</strong><br/>
       <span id="tweets"></span><strong> tweets</strong><br/>
+      <h3>10 premiers noeuds</h3>
+      <table border=0>
+        <tr><td id="desc0"></td><td id="rank0"></td></tr>
+        <tr><td id="desc1"></td><td id="rank1"></td></tr>
+        <tr><td id="desc2"></td><td id="rank2"></td></tr>
+        <tr><td id="desc3"></td><td id="rank3"></td></tr>
+        <tr><td id="desc4"></td><td id="rank4"></td></tr>
+        <tr><td id="desc5"></td><td id="rank5"></td></tr>
+        <tr><td id="desc6"></td><td id="rank6"></td></tr>
+        <tr><td id="desc7"></td><td id="rank7"></td></tr>
+        <tr><td id="desc8"></td><td id="rank8"></td></tr>
+        <tr><td id="desc9"></td><td id="rank9"></td></tr>
+      </table>
     </div>
     <div id="pub" style="position:absolute; z-index:100; top:0px; left:0px; width:160px; height: 600px;">
       <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -36,7 +49,7 @@
         var tweets_count = 0;
         var new_nodes = [];
         function nb_entities(msg) {
-            return msg.entities.hashtags.length /*+ msg.entities.symbols.length + msg.entities.urls.length + msg.entities.user_mentions.length*/;
+            return msg.entities.hashtags.length + msg.entities.user_mentions.length;/*+ msg.entities.symbols.length + msg.entities.urls.length */;
         }
         var run = true;
         var s = new sigma({
@@ -67,6 +80,9 @@
                     s.graph.addNode({
                       id: msg.user.id_str,
                       label: msg.user.name,
+                      type: "user",
+                      screen_name: msg.user.screen_name,
+                      created: new Date(),
                       size: 2,
                       x: 10 + Math.random(),
                       y: 10 + Math.random(),
@@ -74,7 +90,6 @@
                       dY: 0,
                       color: "#F00"
                     });
-                    new_nodes.push(msg.user.id_str);
                   } catch(e) {}
 
                   msg.entities.hashtags.forEach(function(hashtag) {
@@ -82,6 +97,8 @@
                       s.graph.addNode({
                         id: hashtag.text.toLowerCase(),
                         label: "#"+hashtag.text,
+                        type: "hashtag",
+                        created: new Date(),
                         size: 2,
                         x: 50 + Math.random(),
                         y: 50 + Math.random(),
@@ -106,6 +123,9 @@
                       s.graph.addNode({
                         id: user.id_str,
                         label: user.name,
+                        type: "user",
+                        screen_name: user.screen_name,
+                        created: new Date(),
                         size: 2,
                         x: 10 + Math.random(),
                         y: 10 + Math.random(),
@@ -121,11 +141,9 @@
                       source: msg.user.id_str,
                       target: user.id_str
                     });
-
-                    
                   });
 
-                  s.refresh();
+                  //s.refresh();
                   //$('#log').prepend('<br />@' + msg.user.screen_name + ': ' + msg.text);
                   //console.log(msg);
                 }
@@ -139,109 +157,26 @@
         }
 
         function updateInfo() {
-          nodes = s.graph.nodes().length;
-          $("#nodes").html(nodes);
+          nodes = s.graph.nodes();
+          $("#nodes").html(nodes.length);
           $("#edges").html(s.graph.edges().length);
           $("#tweets").html(tweets_count);
+
+          nodes.sort(function(a, b){
+            return s.graph.degree(b.id) - s.graph.degree(a.id);
+          });
+          for(var i=0; i<Math.min(10, nodes.length); i++) {
+            $("#desc"+i).html("#"+ (i+1) +" <strong>"+nodes[i].type+"</strong> : ")
+            if(nodes[i].type == "user")
+              $("#rank"+i).html('<a href="https://www.twitter.com/'+nodes[i].screen_name+'" target="_blank" >'+nodes[i].label+'</a')
+            else
+              $("#rank"+i).html('<a href="https://twitter.com/search?q='+encodeURIComponent(nodes[i].label)+'" target="_blank" >'+nodes[i].label+'</a')
+          }
           setTimeout(function() { updateInfo(); } , 500);
         }
 
-        function unique(arr) {
-            var u = {}, a = [];
-            for(var i = 0, l = arr.length; i < l; ++i){
-                if(!u.hasOwnProperty(arr[i])) {
-                    a.push(arr[i]);
-                    u[arr[i]] = 1;
-                }
-            }
-            return a;
-        }
-
-        // fusion 
-        function fusion(arr, items, nodes) {
-          var new_val = nodes;
-          for(var i=0; i<items.length; i++) {
-            new_val = unique(new_val.concat(arr[items[i]]));
-            arr.splice(arr.indexOf(items[i]), 1);
-          }
-          arr.push(new_val);
-          return arr;
-        }
-
-        function debug(arr, msg) {
-          console.log("debug", msg);
-          for(var i=0; i<arr.length; i++) {
-            console.log(arr[i]);
-          }
-          console.log("end debug", msg);
-        }
-
-        // nettoyage du graph
-        // Retire les nodes qui sont trop peu connectés
-        function cleanUp() {
-          var g = [];
-          var edges = s.graph.edges();
-          for(var i=0; i<edges.length; i++) {
-            var edge = edges[i];
-            var presence_src = [];
-            var presence_dest = [];
-            for(var j=0; j<g.length; j++) {
-              if(g[j].indexOf(edge.source) >= 0) {
-                presence_src.push(j);
-              }
-              if(g[j].indexOf(edge.target) >= 0) {
-                presence_dest.push(j);
-              }
-            }
-            if((presence_dest.length + presence_src.length) == 0) {
-              g.push([edge.source, edge.target]);
-            } else {
-              var to_concat = [];
-              var presence = unique(presence_dest.concat(presence_src));
-              g = fusion(g, presence, [edge.source, edge.target]);
-            }
-          }
-          g.sort(function(a, b){
-            return a.length- b.length; // ASC -> a - b; DESC -> b - a
-          });
-          var min = g[0].length;
-          var max = g[g.length-1].length;
-          var nodes = s.graph.nodes();
-          var removed = 0, temp=0;
-          //console.log(g, max, min);
-          // On drop tout les nodes des graphs de taille < nodes/100
-          for(var i=0;i<g.length;i++) {
-            if(g[i].length < nodes.length/100) {
-              for(var j=0; j<g[i].length; j++) {
-                var n = s.graph.nodes(g[i][j])
-                if(n) {
-                  if(new_nodes.indexOf(n.id) < 0) {
-                    try {
-                      s.graph.dropNode(g[i][j]);
-                      removed += 1;
-                    } catch (e) {}
-                  } else {
-                    temp+=1;
-                    new_nodes.splice(new_nodes.indexOf(n.id), 1);
-                  }
-                }
-              }
-            }
-          }
-
-          // Remove nodes alone if any
-          for(var i=0; i<nodes.length; i++) {
-            if(s.graph.degree(nodes[i].id) == 0) {
-              s.graph.dropNode(nodes[i].id);
-            }
-          }
-
-          setTimeout(function() { cleanUp(); } , 5000);
-
-        }
         setTimeout(function() { updateInfo(); } , 500);
         setTimeout(function() { forceAtlas(); } , 5000);
-        setTimeout(function() { cleanUp(); } , 5000);
     </script>
 </body>
 </html>
